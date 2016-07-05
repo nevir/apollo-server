@@ -67,6 +67,22 @@ describe('expressApollo', () => {
        expect(() => graphqlHTTP(undefined as ExpressApolloOptions)).to.throw('Apollo Server requires options.');
     });
 
+    it('throws an error if options promise is rejected', () => {
+        const app = express();
+        app.use('/graphql', bodyParser.json());
+        app.use('/graphql', graphqlHTTP( (req) => (Promise.reject({})) as any as ExpressApolloOptions));
+        const expected = 'Invalid options';
+        const req = request(app)
+            .post('/graphql')
+            .send({
+                query: 'query test{ testString }',
+            });
+        return req.then((res) => {
+            expect(res.status).to.equal(500);
+            return expect(res.error.text).to.contain(expected);
+        });
+    });
+
     it('can be called with an options function', () => {
         const app = express();
         app.use('/graphql', bodyParser.json());
@@ -285,7 +301,7 @@ describe('expressApollo', () => {
     it('returns express middleware', () => {
         const query = `{ testString }`;
         const middleware = renderGraphiQL({
-            location: '/graphql',
+            endpointURL: '/graphql',
             query: query,
         });
         assert(typeof middleware === 'function');
@@ -295,7 +311,7 @@ describe('expressApollo', () => {
         const app = express();
 
         app.use('/graphiql', renderGraphiQL({
-            location: '/graphql',
+            endpointURL: '/graphql',
         }));
 
         const req = request(app)
@@ -312,14 +328,14 @@ describe('expressApollo', () => {
   });
 
   describe('stored queries', () => {
-    it('works with formatRequest', () => {
+    it('works with formatParams', () => {
         const store = new OperationStore(Schema);
         store.put('query testquery{ testString }');
         const app = express();
         app.use('/graphql', bodyParser.json());
         app.use('/graphql', graphqlHTTP({
             schema: Schema,
-            formatRequest(params) {
+            formatParams(params) {
                 params['query'] = store.get(params.operationName);
                 return params;
             },
@@ -343,7 +359,7 @@ describe('expressApollo', () => {
         app.use('/graphql', bodyParser.json());
         app.use('/graphql', graphqlHTTP({
             schema: Schema,
-            formatRequest(params) {
+            formatParams(params) {
                 if (params.query) {
                     throw new Error('Must not provide query, only operationName');
                 }

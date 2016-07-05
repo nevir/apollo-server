@@ -1,6 +1,5 @@
 /* tslint:disable */
-// ensure support for promise
-import 'es6-promise';
+import 'babel-polyfill'
 
 process.env.NODE_ENV = 'test';
 
