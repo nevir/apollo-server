@@ -55,7 +55,12 @@ export function graphqlHTTP(options: ExpressApolloOptions | ExpressApolloOptions
   return async (req: express.Request, res: express.Response, next) => {
     let optionsObject: ExpressApolloOptions;
     if (isOptionsFunction(options)) {
-      optionsObject = await options(req);
+      try {
+        optionsObject = await options(req);
+      } catch (e) {
+        res.status(500);
+        res.send(`Invalid options provided to ApolloServer: ${e.message}`);
+      }
     } else {
       optionsObject = options;
     }
