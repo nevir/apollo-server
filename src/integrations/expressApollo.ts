@@ -32,7 +32,7 @@ export function apolloExpress(options: ApolloOptions | ExpressApolloOptionsFunct
     let optionsObject: ApolloOptions;
     if (isOptionsFunction(options)) {
       try {
-        optionsObject = await options(req);
+        optionsObject = await options(req, res);
       } catch (e) {
         res.status(500);
         res.send(`Invalid options provided to ApolloServer: ${e.message}`);
